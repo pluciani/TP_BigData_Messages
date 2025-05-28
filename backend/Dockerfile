@@ -1,10 +1,17 @@
+# Utilisation d'une image de base Python
 FROM python:3.9-slim
 
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Install required libs
-RUN pip install flask flask-cors kafka-python Werkzeug
+# Copier les fichiers de configuration
+COPY requirements.txt requirements.txt
 
-COPY backend.py .
+# Installer les dépendances
+RUN pip install -r requirements.txt
 
-CMD ["python", "backend.py"]
+# Copier tout le contenu du répertoire courant dans le conteneur
+COPY . .
+
+# Définir la commande par défaut
+CMD ["python", "app.py"]
