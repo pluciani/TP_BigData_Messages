@@ -163,7 +163,6 @@ services:
       - PYTHONPATH=/app/pythonpath
     depends_on:
       - hive-server
-      #- postgres-airflow
     volumes:
       - ./superset_home:/app/superset_home
     command: >
@@ -189,20 +188,6 @@ services:
       depends_on:
         - kafka
 
-  # backend:
-  #     build: ./backend
-  #     container_name: backend
-  #     restart: always
-  #     ports:
-  #       - "5550:5550"
-  #     volumes:
-  #       - ./backend:/app
-  #     environment:
-  #       - FLASK_ENV=development
-  #     depends_on:
-  #       - kafka
-  #       - zookeeper
-
   postgres:
     image: postgres:13
     container_name: postgres
@@ -222,53 +207,11 @@ services:
       retries: 10
 
 
-  # postgres-airflow:
-  #   image: postgres:15
-  #   container_name: postgres-airflow
-  #   environment:
-  #     - POSTGRES_USER=airflow
-  #     - POSTGRES_PASSWORD=airflow
-  #     - POSTGRES_DB=airflow
-  #     - POSTGRES_HOST_AUTH_METHOD=md5
-  #   ports:
-  #     - "5433:5432"
-
-  # airflow:
-  #   build:
-  #     context: .
-  #     dockerfile: ./airflow/Dockerfile-airflow
-  #   container_name: airflow
-  #   depends_on:
-  #     - postgres-airflow
-  #   environment:
-  #     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-  #     - AIRFLOW__CORE__FERNET_KEY=Lun1uazC_dvkd-kgrYDbBn7wY4OGxrMW-Ns4iRdJ_-4=
-  #     - AIRFLOW__CORE__DEFAULT_TIMEZONE=Europe/Paris
-  #     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-  #     - AIRFLOW__CORE__DAGS_FOLDER=/usr/local/airflow/dags
-  #   command: >
-  #     bash -c "
-  #     airflow db init;
-  #     airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@example.com || true;
-  #     airflow webserver &
-  #     airflow scheduler
-  #     "
-  #   ports:
-  #     - "18080:8080"
-  #   volumes:
-  #     - ./airflow/dags:/usr/local/airflow/dags
-  #     - ./airflow/plugins:/usr/local/airflow/plugins
-  #     - ./airflow/logs:/usr/local/airflow/logs
-  #     - airflow_db_volume:/var/lib/postgresql/data
-  #     - ./airflow/requirements.txt:/requirements.txt
-
-
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
   nifi_data:
-  airflow_db_volume:
   superset_home:
   postgres_data:
   warehouse:
