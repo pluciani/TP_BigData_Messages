@@ -5,6 +5,7 @@ services:
     image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
     volumes:
       - namenode:/hadoop/dfs/name
+      - ./data:/data
     environment:
       - CLUSTER_NAME=test
     env_file:
