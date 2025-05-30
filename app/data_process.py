@@ -5,6 +5,8 @@ from pyspark.sql.functions import lit
 from pyspark.sql.functions import col
 from pyspark.sql.functions import udf
 from pyspark.sql.types import IntegerType
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
 
 spark = SparkSession.builder \
     .appName("DataProcess") \
@@ -60,8 +62,34 @@ positive_count_merged = df_merged.filter(df_merged['sentiment'] == 0).count()
 
 
 print("Nombre total de messages negatifs : {}".format(negative_count_merged))
-print("Nombre total de messages positifs: {}".format(positive_count_merged))
+print("Nombre total de messages positifs : {}".format(positive_count_merged))
+
+window_pos = Window.partitionBy('sentiment').orderBy('tweet')
+df_merged = df_merged.withColumn('row_num', row_number().over(window_pos))
+df_merged = df_merged.filter(
+    ((col('sentiment') == 0) & (col('row_num') <= 10000)) |
+    ((col('sentiment') == 1) & (col('row_num') <= 10000))
+).drop('row_num')
+
+negative_count_limit = df_merged.filter(df_merged['sentiment'] == 1).count()
+positive_count_limit = df_merged.filter(df_merged['sentiment'] == 0).count()
+
+
+print("Nombre total de messages negatifs : {}".format(negative_count_limit))
+print("Nombre total de messages positifs : {}".format(positive_count_limit))
+
+# Split into test and train sets
+test_neg = df_merged.filter(col('sentiment') == 1).orderBy('tweet').limit(3000)
+test_pos = df_merged.filter(col('sentiment') == 0).orderBy('tweet').limit(3000)
+test_df = test_neg.unionByName(test_pos)
+
+train_neg = df_merged.filter(col('sentiment') == 1).orderBy('tweet').subtract(test_neg)
+train_pos = df_merged.filter(col('sentiment') == 0).orderBy('tweet').subtract(test_pos)
+train_df = train_neg.unionByName(train_pos)
+
 
 df_merged.write.csv("hdfs://namenode:9000/data/processed_data.csv", header=True, mode="overwrite")
+train_df.write.csv("hdfs://namenode:9000/data/processed_data_train.csv", header=True, mode="overwrite")
+test_df.write.csv("hdfs://namenode:9000/data/processed_data_test.csv", header=True, mode="overwrite")
 
 spark.stop()
