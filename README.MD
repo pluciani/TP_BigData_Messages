@@ -82,6 +82,15 @@ python3 ./app/tweet-producer.py
 python3 ./app/tweet-consumer.py
 ```
 
+## Accès à superset
+
+- http://localhost:8089/superset/
+
+## Lien vers notre présentation 
+
+- https://www.canva.com/design/DAGo6nQZYbY/6D01JSJvFnWo-lrPC3cn0A/edit?utm_content=DAGo6nQZYbY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
+
 ## Auteurs
 
 - Simon GUILLET
