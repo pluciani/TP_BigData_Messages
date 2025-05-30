@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import time
 from kafka import KafkaProducer
 import json
@@ -7,6 +8,7 @@ import os
 
 from pyspark import SparkContext
 from pyspark.sql import SQLContext
+from pyspark.ml import PipelineModel
 
 HDFS_CSV_PATH = 'hdfs://namenode:9000/data/processed_data_test.csv'
 
@@ -15,8 +17,6 @@ def load_tweets_with_spark(hdfs_csv_path):
     sqlContext = SQLContext(sc)
     df = sqlContext.read.format("csv").options(header='true', inferSchema='true').load(hdfs_csv_path)
     tweets = df.collect()
-    sc.stop()
-    # Convert Row objects to dicts
     return [row.asDict() for row in tweets]
 
 def get_new_tweet(tweets):
@@ -47,6 +47,7 @@ def main():
         print("Producer stopped.")
     finally:
         producer.close()
+        sc.stop()
 
 if __name__ == "__main__":
     main()
