@@ -87,6 +87,11 @@ train_neg = df_merged.filter(col('sentiment') == 1).orderBy('tweet').subtract(te
 train_pos = df_merged.filter(col('sentiment') == 0).orderBy('tweet').subtract(test_pos)
 train_df = train_neg.unionByName(train_pos)
 
+negative_count_test = test_df.filter(test_df['sentiment'] == 1).count()
+positive_count_test = test_df.filter(test_df['sentiment'] == 0).count()
+
+print("Nombre total de messages negatifs dans le test : {}".format(negative_count_limit))
+print("Nombre total de messages positifs dans le test : {}".format(positive_count_limit))
 
 df_merged.write.csv("hdfs://namenode:9000/data/processed_data.csv", header=True, mode="overwrite")
 train_df.write.csv("hdfs://namenode:9000/data/processed_data_train.csv", header=True, mode="overwrite")

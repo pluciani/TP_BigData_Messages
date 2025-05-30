@@ -5,6 +5,7 @@ import time
 from pyspark import SparkContext
 from pyspark.sql import SQLContext
 from pyspark.ml import PipelineModel
+from pyspark.sql.functions import lit
 
 KAFKA_BROKER = 'kafka:9092'
 TOPIC = 'topic1'
@@ -23,8 +24,7 @@ def main():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS {0} (
         id STRING,
-        sentiment INT,
-        tweet STRING,
+        text STRING,
         toxicity_prediction INT
     )
     STORED AS PARQUET
@@ -41,7 +41,7 @@ def main():
     print("Starting Kafka tweet consumer...")
     
     insert_query = """
-    INSERT INTO TABLE {0} VALUES (%s, %s, %s, %s)
+    INSERT INTO TABLE {0} VALUES (%s, %s, %s)
     """.format(HIVE_TABLE)
 
     for message in consumer:
@@ -52,16 +52,17 @@ def main():
         tweet = message.value
         tweet_df = sqlContext.createDataFrame([{"tweet": tweet["text"]}])
         prediction = loaded_model.transform(tweet_df).collect()[0]
-        tweet["toxicity_prediction"] = prediction["prediction"]
-        print("Received tweet:", tweet)
+        tweet_df = tweet_df.withColumn("toxicity_prediction", lit(prediction["prediction"]))
+    
+        row = tweet_df.first() 
+        print("Received tweet:", row)
         cursor.execute(insert_query, (
-            tweet.get('id', ''),
-            tweet.get('sentiment', 0),
-            tweet.get('tweet', ''),
-            tweet.get('toxicity_predictions', 0)
+            row['id'] if 'id' in row else '',
+            row['tweet'] if 'tweet' in row else '',
+            row['toxicity_prediction'] if 'toxicity_prediction' in row else 0
         ))
         conn.commit()
-        # time.sleep(1)
+        time.sleep(1)
 
     cursor.close()
     conn.close()
